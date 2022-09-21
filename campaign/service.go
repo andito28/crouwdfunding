@@ -1,6 +1,7 @@
 package campaign
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/gosimple/slug"
@@ -10,6 +11,7 @@ type Service interface {
 	CreateCampaign(input CreateCampaignInput) (Campaign, error)
 	GetCampaign(userID int) ([]Campaign, error)
 	GetCampaignByID(input GetCampaignDetailInput) (Campaign, error)
+	SaveCampign(inputID GetCampaignDetailInput, inputData CreateCampaignInput) (Campaign, error)
 }
 
 type service struct {
@@ -62,5 +64,29 @@ func (s *service) CreateCampaign(input CreateCampaignInput) (Campaign, error) {
 		return newCampaign, err
 	}
 	return newCampaign, nil
+}
 
+func (s *service) SaveCampign(inputID GetCampaignDetailInput, inputData CreateCampaignInput) (Campaign, error) {
+	campaign, err := s.repository.FindByID(inputID.ID)
+	if err != nil {
+		return campaign, err
+	}
+
+	if campaign.UserID != inputData.User.ID {
+		return campaign, errors.New("Not an owner of the campaign")
+	}
+
+	campaign.Name = inputData.Name
+	campaign.Description = inputData.Description
+	campaign.ShortDescription = inputData.ShortDescription
+	campaign.Perks = inputData.Perks
+	campaign.GoalAmount = inputData.GoalAmount
+
+	newCampaign, err := s.repository.Update(campaign)
+
+	if err != nil {
+		return newCampaign, err
+	}
+
+	return newCampaign, nil
 }
