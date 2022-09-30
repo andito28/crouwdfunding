@@ -47,6 +47,7 @@ func main() {
 	api.GET("/campaign/:id", campaignHandler.GetCampaign)
 	api.POST("/campaigns", authMiddleware(authService, userService), campaignHandler.CreateCampaign)
 	api.PUT("/campaigns/:id", authMiddleware(authService, userService), campaignHandler.UpdateCampaign)
+	api.POST("/campaign-images", authMiddleware(authService, userService), campaignHandler.UploadImage)
 
 	router.Run("localhost:8080")
 
@@ -59,50 +60,40 @@ func main() {
 //ambil user dari db berdasarkan user_id lewat service
 //kita set context dari isinya user
 
-func authMiddleware(authService auth.Servive, userService user.Service) gin.HandlerFunc {
+func authMiddleware(authService auth.Service, userService user.Service) gin.HandlerFunc {
 
 	return func(c *gin.Context) {
 		auhtHeader := c.GetHeader("Authorization")
-
 		if !strings.Contains(auhtHeader, "Bearer") {
 			response := helper.APIResponse("Unauthorized", http.StatusUnauthorized, "error", nil)
 			c.AbortWithStatusJSON(http.StatusUnauthorized, response)
 			return
 		}
-
 		tokenString := ""
 		arrayToken := strings.Split(auhtHeader, " ")
 
 		if len(arrayToken) == 2 {
 			tokenString = arrayToken[1]
 		}
-
 		token, err := authService.ValidateToken(tokenString)
-
 		if err != nil {
 			response := helper.APIResponse("Unauthorized", http.StatusUnauthorized, "error", nil)
 			c.AbortWithStatusJSON(http.StatusUnauthorized, response)
 			return
 		}
-
 		claim, ok := token.Claims.(jwt.MapClaims)
-
 		if !ok || !token.Valid {
 			response := helper.APIResponse("Unauthorized", http.StatusUnauthorized, "error", nil)
 			c.AbortWithStatusJSON(http.StatusUnauthorized, response)
 			return
 		}
-
 		userID := int(claim["user_id"].(float64))
-
 		user, err := userService.GetUserById(userID)
-
 		if err != nil {
 			response := helper.APIResponse("Unauthorized", http.StatusUnauthorized, "error", nil)
 			c.AbortWithStatusJSON(http.StatusUnauthorized, response)
 			return
 		}
-
 		c.Set("currentUser", user)
 	}
 }

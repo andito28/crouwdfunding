@@ -14,3 +14,9 @@ type CreateCampaignInput struct {
 type GetCampaignDetailInput struct {
 	ID int `uri:"id" binding:"required"`
 }
+
+type CreateCampaignImageInput struct {
+	CampaignID int  `form:"campaign_id" binding:"required"`
+	IsPrimary  bool `form:"is_primary"`
+	User       user.User
+}
