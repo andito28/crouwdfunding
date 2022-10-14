@@ -48,6 +48,7 @@ type CaimpaignDetailFormatter struct {
 	ImageURL         string                    `json:"image_url"`
 	GoalAmount       int                       `json:"goal_amount"`
 	CurrentAmount    int                       `json:"current_amount"`
+	BackerCount      int                       `json:"backer_count"`
 	UserID           int                       `json:"user_id"`
 	Slug             string                    `json:"slug"`
 	Perks            []string                  `json:"perks"`
@@ -71,6 +72,7 @@ func FormatCampaignDetail(campaign Campaign) CaimpaignDetailFormatter {
 	campaignDetail.Name = campaign.Name
 	campaignDetail.ShortDescription = campaign.ShortDescription
 	campaignDetail.Description = campaign.Description
+	campaignDetail.BackerCount = campaign.BackerCount
 	campaignDetail.Slug = campaign.Slug
 	campaignDetail.ImageURL = ""
 

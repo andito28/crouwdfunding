@@ -5,6 +5,7 @@ import (
 	"crowdfunding/campaign"
 	"crowdfunding/handler"
 	"crowdfunding/helper"
+	"crowdfunding/payment"
 	"crowdfunding/transaction"
 	"crowdfunding/user"
 	"log"
@@ -12,6 +13,7 @@ import (
 	"strings"
 
 	"github.com/dgrijalva/jwt-go"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -33,14 +35,16 @@ func main() {
 
 	userService := user.NewService(userRepository)
 	campaignService := campaign.NewService(campaignRepository)
-	transactionService := transaction.NewService(transactionRepository, campaignRepository)
+	paymentService := payment.NewService()
+	transactionService := transaction.NewService(transactionRepository, campaignRepository, paymentService)
 
 	authService := auth.NewService()
 	userHandler := handler.NewUserHandler(userService, authService)
 	campaignHandler := handler.NewCampaignHandler(campaignService)
-	transanctionHandler := handler.NewTransactionHandler(transactionService)
+	transanctionHandler := handler.NewTransactionHandler(transactionService, paymentService)
 
 	router := gin.Default()
+	router.Use(cors.Default())
 	router.Static("/images", "./images")
 	api := router.Group("api/v1")
 	api.POST("/users", userHandler.RegisterUser)
@@ -54,6 +58,9 @@ func main() {
 	api.POST("/campaign-images", authMiddleware(authService, userService), campaignHandler.UploadImage)
 	api.GET("/campaigns/:id/transaction", authMiddleware(authService, userService), transanctionHandler.GetCampaignTransaction)
 	api.GET("/transaction", authMiddleware(authService, userService), transanctionHandler.GetTransaction)
+	api.POST("/transaction", authMiddleware(authService, userService), transanctionHandler.CreateTransaction)
+	api.POST("/transaction/notification", authMiddleware(authService, userService), transanctionHandler.GetNotification)
+	api.GET("/user/fetch", authMiddleware(authService, userService), userHandler.FetchUser)
 
 	router.Run("localhost:8080")
 
